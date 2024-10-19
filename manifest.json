@@ -1,0 +1,19 @@
+{
+    "manifest_version" : 2,
+    "name" : "Social Blocker",
+    "version" : "1.1",
+    "description" : "blocks access to social websites",
+    "permissions" : [
+        "webRequest",
+        "webRequestBlocking",
+        "storage",
+        "<all_urls>"
+    ],
+    "background" : {
+        "scripts" : ["background.js"]
+    },
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_title": "Simple Website Blocker"
+      }
+}
