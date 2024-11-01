@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <h1>Social Blocker</h1>
+    <h1 class="">Social Blocker</h1>
     <div id="toggles">
       <div class="toggle-item">
         <label for="facebook">Facebook</label>
@@ -29,7 +29,7 @@
         </label>
       </div>
       <div class="toggle-item">
-        <label for="twitter">Twitter</label>
+        <label for="twitter">Twitter/X</label>
         <label class="switch">
           <input type="checkbox" id="twitter" />
           <span class="slider round"></span>
@@ -43,7 +43,22 @@
         </label>
       </div>
     </div>
-    <button id="updateButton">Update</button>
+
+    <div id="focused-hours">
+      <h3>Activate Focus Hours</h3>
+      <p>access will be blocked during these hours.</p>
+      <div class="time-input">
+        <!-- <label for="startTime">Start Time</label> -->
+        <input type="time" id="startTime" />
+        <input type="time" id="endTime" />
+      </div>
+      <!-- <div class="time-input">
+        <label for="endTime">End Time</label>
+        <input type="time" id="endTime" />
+      </div> -->
+    </div>
+
+    <button id="applyButton">Apply</button>
     <script src="popup.js"></script>
   </body>
 </html>
