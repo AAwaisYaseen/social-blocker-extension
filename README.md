@@ -1,3 +1,4 @@
+![logo 2](https://github.com/user-attachments/assets/af603fc6-1794-42c9-b2ed-bd80b31552a3)
 
 # Social Blocker
 
@@ -16,7 +17,7 @@ Blocks access to social websites to keep you focused between your working hours.
 - go to "chrome://extensions/"
 - click on "Load Unpacked" and select source code from directory
 - ready for acccess in your browser extensions
-## Authors
+## Author
 
 - [@aawaisyaseen](https://github.com/aawaisyaseen)
 
