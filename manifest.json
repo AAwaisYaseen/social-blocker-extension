@@ -1,27 +1,27 @@
 {
-    "manifest_version" : 2,
-    "name" : "Social Blocker",
-    "version" : "1.1",
-    "description" : "blocks access to social websites",
-    "permissions" : [
-        "webRequest",
-        "webRequestBlocking",
-        "storage",
-        "*://*.facebook.com/*",
-        "*://*.instagram.com/*",
-        "*://*.youtube.com/*",
-        "*://*.twitter.com/*",
-        "*://*.reddit.com/*"
-    ],
-    "background" : {
-        "scripts" : ["background.js"]
-    },
-    "browser_action": {
-        "default_icon": "src/assets/icon.png",
-        "default_popup": "src/components/popup/popup.html",
-        "default_title": "Social Blocker"
-      },
-      "web_accessible_resources": [
-        "blocked.html"
-      ]
+  "manifest_version": 3,
+  "name": "Social Blocker",
+  "version": "1.2",
+  "description": "Blocks access to specified websites.",
+  "permissions": [
+    "declarativeNetRequest",
+    "storage",
+    "alarms",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "*://*.facebook.com/*",
+    "*://*.instagram.com/*",
+    "*://*.youtube.com/*",
+    "*://*.twitter.com/*",
+    "*://*.reddit.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": "src/assets/icon.png",
+    "default_popup": "src/components/popup/popup.html",
+    "default_title": "Social Blocker"
+  }
 }

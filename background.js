@@ -1,28 +1,81 @@
 let blockedSites = [];
 let focusedHours = { start: "", end: "" };
-let blockedPagePath = "src/components/blocked/blocked.html";
 
+// Function to update blocked sites and focused hours
 function updateSettings() {
-  chrome.storage.sync.get(["blockedSites", "focusedHours"], (data) => {
+  chrome.storage.sync.get(["blockedSites", "focusedHours"], async (data) => {
     blockedSites = data.blockedSites || [];
     focusedHours = data.focusedHours || { start: "", end: "" };
 
-    if (chrome.webRequest.onBeforeRequest.hasListener(blockRequest)) {
-      chrome.webRequest.onBeforeRequest.removeListener(blockRequest);
-    }
+    // Schedule alarms based on focused hours
+    scheduleAlarms();
 
-    if (blockedSites.length > 0) {
-      chrome.webRequest.onBeforeRequest.addListener(
-        blockRequest,
-        { urls: blockedSites, types: ["main_frame"] },
-        ["blocking"]
-      );
-    }
+    // Update rules based on current time
+    await updateRules();
   });
 }
 
-function isWithinFocusedHours() {
+// Function to schedule alarms
+function scheduleAlarms() {
+  // Clear existing alarms
+  chrome.alarms.clearAll();
+
+  if (focusedHours.start && focusedHours.end) {
+    const startAlarmTime = getNextTime(focusedHours.start);
+    const endAlarmTime = getNextTime(focusedHours.end);
+
+    // Schedule start alarm
+    chrome.alarms.create("startBlocking", { when: startAlarmTime.getTime() });
+
+    // Schedule end alarm
+    chrome.alarms.create("stopBlocking", { when: endAlarmTime.getTime() });
+  }
+}
+
+// Function to calculate the next occurrence of a given time
+function getNextTime(timeStr) {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  const now = new Date();
+  const nextTime = new Date();
+
+  nextTime.setHours(hours);
+  nextTime.setMinutes(minutes);
+  nextTime.setSeconds(0);
+  nextTime.setMilliseconds(0);
+
+  if (nextTime <= now) {
+    // If the time has already passed today, schedule for tomorrow
+    nextTime.setDate(nextTime.getDate() + 1);
+  }
+
+  return nextTime;
+}
+
+// Function to update dynamic rules
+async function updateRules() {
+  const isBlockingActive = await isWithinFocusedHours();
+
+  // Clear existing dynamic rules
+  const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+  const existingRuleIds = existingRules.map((rule) => rule.id);
+  if (existingRuleIds.length > 0) {
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: existingRuleIds,
+    });
+  }
+
+  if (isBlockingActive && blockedSites.length > 0) {
+    const rules = createBlockingRules(blockedSites);
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      addRules: rules,
+    });
+  }
+}
+
+// Function to check if current time is within focused hours
+async function isWithinFocusedHours() {
   if (!focusedHours.start || !focusedHours.end) {
+    // If focused hours are not set, block all the time
     return true;
   }
 
@@ -46,15 +99,46 @@ function parseTime(timeStr) {
   return hours * 60 + minutes;
 }
 
-// Function to block and redirect to blocked page
-function blockRequest(details) {
-  if (isWithinFocusedHours()) {
-    const redirectUrl = chrome.runtime.getURL(blockedPagePath);
-    return { redirectUrl };
-  } else {
-    return {};
-  }
+// Function to create blocking rules based on blocked sites
+function createBlockingRules(blockedSites) {
+  const rules = [];
+  let ruleId = 1;
+
+  blockedSites.forEach((sitePattern) => {
+    console.log("sitePattern", sitePattern);
+    console.log(
+      "sitePatternToUrlFilter(sitePattern)",
+      sitePatternToUrlFilter(sitePattern)
+    );
+    const rule = {
+      id: ruleId++,
+      priority: 1,
+      // action: {
+      //   type: "block",
+      // },
+      action: { type: "redirect", redirect: { url: "https://example.com" } },
+      condition: {
+        urlFilter: sitePatternToUrlFilter(sitePattern),
+        resourceTypes: ["main_frame"],
+      },
+    };
+    rules.push(rule);
+  });
+
+  return rules;
 }
+
+function sitePatternToUrlFilter(sitePattern) {
+  return sitePattern.replace(/^\*:\/\/\*\./, "").replace(/\/\*$/, "");
+}
+
+// Listen for alarms
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "startBlocking" || alarm.name === "stopBlocking") {
+    updateRules();
+    scheduleAlarms(); // Reschedule alarms for the next day
+  }
+});
 
 // Listen for storage changes
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -63,4 +147,5 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
+// Initial load
 updateSettings();
